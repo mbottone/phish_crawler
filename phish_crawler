@@ -2,18 +2,25 @@
 
 require_relative "PhishTank"
 require_relative "VirtualMachine"
+require_relative "HTMLFormFinder"
+require_relative "ReportOutput"
 
 numOfSites = ARGV[0].to_i
 
 tank = PhishTank.new
 sites = tank.get_sites
+numOfSites = [numOfSites, sites.length].min
 
 vm = VirtualMachine.new
 vm.start
 
+hff = HTMLFormFinder.new
+
 numOfSites.times do |i|
 
-	site = sites[i]
+	url = sites[i].url
+	report = ReportOutput.new(url)
+	puts vm.get_html(url)
 
 end
 
