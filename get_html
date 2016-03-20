@@ -1,16 +1,60 @@
 #!/usr/bin/python
 
 import sys
+import re
+import os
+import ConfigParser
 from selenium import webdriver
 from pyvirtualdisplay import Display
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+import selenium.webdriver.support.expected_conditions as EC
+import selenium.webdriver.support.ui as ui
+from selenium.webdriver.support.ui import WebDriverWait
 
 display = Display(visible = 0, size = (1024, 768))
 display.start()
 
 driver = webdriver.Firefox()
-driver.get(str(sys.argv[1]))
-print driver.title
+driver.implicitly_wait(10)
+url = str(sys.argv[1])
+urlDir = "/vagrant/reports/" + re.sub("[^0-9A-Za-z.\-]", "_", url)
+
+driver.get(url)
+
+if not os.path.exists(urlDir):
+    os.makedirs(urlDir)
+
+driver.get_screenshot_as_file(urlDir + "/page.png")
+
+config = ConfigParser.ConfigParser()
+config.readfp(open(r'/vagrant/crawler.config'))
+
+lastElement = None
+forms = driver.find_elements_by_tag_name("form")
+
+if len(forms) == 1:
+	inputs = forms[0].find_elements_by_tag_name("input")
+	for el in inputs:
+		elName = el.get_attribute("name")
+		elType = el.get_attribute("type")
+
+		try:
+			data = str(config.get("fakeData", elName.lower()))
+		except:
+			data = ""
+			if el.is_displayed():
+				print elName
+
+		if el.is_displayed():
+			el.send_keys(data)
+
+		lastElement = el
+
+driver.get_screenshot_as_file(urlDir + "/form.png")
+if lastElement is not None:
+	lastElement.submit()
+driver.get_screenshot_as_file(urlDir + "/submit.png")
 
 driver.close()
 display.stop()

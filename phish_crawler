@@ -19,7 +19,6 @@ hff = HTMLFormFinder.new
 numOfSites.times do |i|
 
 	url = sites[i].url
-	report = ReportOutput.new(url)
 	puts vm.get_html(url)
 
 end
